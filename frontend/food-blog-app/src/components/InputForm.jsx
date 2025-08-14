@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 export default function InputForm({ setIsOpen }) {
   const [email, setEmail] = useState("");
@@ -16,14 +16,9 @@ export default function InputForm({ setIsOpen }) {
     try {
       const res = await axios.post(`${API_BASE_URL}/${endpoint}`, { email, password });
 
-      if (res.data?.token) {
-        localStorage.setItem("token", res.data.token);
-      }
-      if (res.data?.user) {
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-      }
+      if (res.data?.token) localStorage.setItem("token", res.data.token);
+      if (res.data?.user) localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      // Close the modal safely
       if (typeof setIsOpen === "function") setIsOpen(false);
     } catch (err) {
       const errMsg = err.response?.data?.error || err.response?.data?.message || err.message || "Something went wrong";
