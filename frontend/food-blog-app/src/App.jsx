@@ -8,10 +8,12 @@ import AddFoodRecipe from './pages/AddFoodRecipe';
 import EditRecipe from './pages/EditRecipe';
 import RecipeDetails from './pages/RecipeDetails';
 
-// Base API URL (fallback to localhost for dev)
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+// Use deployed backend or localhost fallback
+const API_URL = process.env.REACT_APP_API_URL || "https://foodrecipe-sab6.onrender.com";
 
-// Fetch all recipes safely
+// ----------- Loader Functions ----------- //
+
+// Fetch all recipes
 const getAllRecipes = async () => {
   try {
     const res = await axios.get(`${API_URL}/recipe`);
@@ -22,7 +24,7 @@ const getAllRecipes = async () => {
   }
 };
 
-// Fetch my recipes safely
+// Fetch recipes created by logged-in user
 const getMyRecipes = async () => {
   try {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -38,7 +40,7 @@ const getMyRecipes = async () => {
   }
 };
 
-// Get favorite recipes from localStorage
+// Fetch favorite recipes from localStorage
 const getFavRecipes = () => {
   try {
     return JSON.parse(localStorage.getItem("fav")) || [];
@@ -48,13 +50,12 @@ const getFavRecipes = () => {
   }
 };
 
-// Fetch single recipe with creator's email safely
+// Fetch single recipe with creator's email
 const getRecipe = async ({ params }) => {
   try {
     const recipeRes = await axios.get(`${API_URL}/recipe/${params.id}`);
     let recipe = recipeRes.data;
 
-    // Validate createdBy before making a user request
     if (recipe.createdBy && typeof recipe.createdBy === 'string' && recipe.createdBy.length === 24) {
       try {
         const userRes = await axios.get(`${API_URL}/user/${recipe.createdBy}`);
@@ -62,28 +63,38 @@ const getRecipe = async ({ params }) => {
       } catch (userErr) {
         console.warn("Unable to fetch creator's email:", userErr.response?.data || userErr.message);
       }
-    } else {
-      console.warn("Invalid or missing createdBy in recipe:", recipe);
     }
-
     return recipe;
   } catch (err) {
     console.error("Error fetching recipe:", err.response?.data || err.message);
-    throw err;
+    throw new Response("Recipe not found", { status: 404 });
   }
 };
 
+// ----------- Simple Error UI ----------- //
+function ErrorPage({ error }) {
+  return (
+    <div style={{ padding: "2rem", textAlign: "center" }}>
+      <h1>Oops! Something went wrong.</h1>
+      <p>{error?.statusText || error?.message || "An unexpected error occurred."}</p>
+      <a href="/" style={{ color: "#007bff" }}>Go back home</a>
+    </div>
+  );
+}
+
+// ----------- Router Setup ----------- //
 const router = createBrowserRouter([
   {
     path: "/",
     element: <MainNavigation />,
+    errorElement: <ErrorPage />, // <-- added to handle loader errors
     children: [
-      { path: "/", element: <Home />, loader: getAllRecipes },
-      { path: "/myRecipe", element: <Home />, loader: getMyRecipes },
-      { path: "/favRecipe", element: <Home />, loader: getFavRecipes },
+      { path: "/", element: <Home />, loader: getAllRecipes, errorElement: <ErrorPage /> },
+      { path: "/myRecipe", element: <Home />, loader: getMyRecipes, errorElement: <ErrorPage /> },
+      { path: "/favRecipe", element: <Home />, loader: getFavRecipes, errorElement: <ErrorPage /> },
       { path: "/addRecipe", element: <AddFoodRecipe /> },
       { path: "/editRecipe/:id", element: <EditRecipe /> },
-      { path: "/recipe/:id", element: <RecipeDetails />, loader: getRecipe }
+      { path: "/recipe/:id", element: <RecipeDetails />, loader: getRecipe, errorElement: <ErrorPage /> }
     ]
   }
 ]);
