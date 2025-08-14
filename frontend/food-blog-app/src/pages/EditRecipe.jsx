@@ -42,31 +42,18 @@ export default function EditRecipe() {
 
   const onHandleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      alert("You must be logged in to edit a recipe.");
-      return;
-    }
-
     const formData = new FormData();
     for (const key in recipeData) {
-      if (recipeData[key] !== null) {
-        formData.append(key, key === "ingredients" ? JSON.stringify(recipeData[key]) : recipeData[key]);
-      }
+      formData.append(key, key === "ingredients" ? JSON.stringify(recipeData[key]) : recipeData[key]);
     }
 
     try {
       await axios.put(`${API_BASE_URL}/recipe/${id}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'authorization': 'bearer ' + token
-        }
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
       navigate("/myRecipe");
     } catch (err) {
       console.error("Error updating recipe:", err.response?.data || err.message);
-      alert(err.response?.data?.message || "Failed to update recipe.");
     }
   };
 
@@ -75,67 +62,24 @@ export default function EditRecipe() {
       <form className='form' onSubmit={onHandleSubmit}>
         <div className='form-control'>
           <label htmlFor="title">Title</label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            placeholder="Enter recipe title"
-            value={recipeData.title}
-            onChange={onHandleChange}
-            required
-          />
+          <input type="text" id="title" className='input' name="title" value={recipeData.title} onChange={onHandleChange} required />
         </div>
-
         <div className='form-control'>
           <label htmlFor="time">Time</label>
-          <input
-            type="text"
-            id="time"
-            name="time"
-            placeholder="Enter cooking time (e.g., 30 mins)"
-            value={recipeData.time}
-            onChange={onHandleChange}
-            required
-          />
+          <input type="text" id="time" className='input' name="time" value={recipeData.time} onChange={onHandleChange} required />
         </div>
-
         <div className='form-control'>
           <label htmlFor="ingredients">Ingredients</label>
-          <textarea
-            id="ingredients"
-            name="ingredients"
-            placeholder="Enter ingredients separated by commas"
-            rows="5"
-            value={recipeData.ingredients.join(",")}
-            onChange={onHandleChange}
-            required
-          />
+          <textarea id="ingredients" className='input-textarea' name="ingredients" rows="5" value={recipeData.ingredients.join(",")} onChange={onHandleChange} required></textarea>
         </div>
-
         <div className='form-control'>
           <label htmlFor="instructions">Instructions</label>
-          <textarea
-            id="instructions"
-            name="instructions"
-            placeholder="Enter step-by-step instructions"
-            rows="5"
-            value={recipeData.instructions}
-            onChange={onHandleChange}
-            required
-          />
+          <textarea id="instructions" className='input-textarea' name="instructions" rows="5" value={recipeData.instructions} onChange={onHandleChange} required></textarea>
         </div>
-
         <div className='form-control'>
           <label htmlFor="coverImage">Recipe Image</label>
-          <input
-            type="file"
-            id="coverImage"
-            name="coverImage"
-            onChange={onHandleChange}
-            className='input'
-          />
+          <input type="file" className='input' name="coverImage" onChange={onHandleChange} />
         </div>
-
         <button type="submit">Update Recipe</button>
       </form>
     </div>

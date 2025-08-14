@@ -1,46 +1,27 @@
 import React from 'react';
-import profileImg from '../assets/profile.png';
 import { useLoaderData } from 'react-router-dom';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_BASE_URL = process.env.REACT_APP_API_URL;
 
 export default function RecipeDetails() {
   const recipe = useLoaderData();
-  if (!recipe) return <p>Loading...</p>;
 
   return (
     <div className='outer-container'>
-      <div className='profile'>
-        <img src={profileImg} width="50px" height="50px" alt="profile" />
-        <h5>{recipe.email || "Anonymous"}</h5>
-      </div>
-
       <h3 className='title'>{recipe.title}</h3>
-
-      {/* Safe image URL */}
       {recipe.coverImage && (
         <img
           src={`${API_BASE_URL}/images/${recipe.coverImage}`}
           width="220px"
           height="200px"
           alt={recipe.title}
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = profileImg; // fallback image
-          }}
         />
       )}
-
       <div className='recipe-details'>
         <div className='ingredients'>
           <h4>Ingredients</h4>
-          <ul>
-            {Array.isArray(recipe.ingredients)
-              ? recipe.ingredients.map((item, idx) => <li key={idx}>{item}</li>)
-              : [recipe.ingredients].map((item, idx) => <li key={idx}>{item}</li>)}
-          </ul>
+          <ul>{recipe.ingredients.map((item, idx) => (<li key={idx}>{item}</li>))}</ul>
         </div>
-
         <div className='instructions'>
           <h4>Instructions</h4>
           <span>{recipe.instructions}</span>
