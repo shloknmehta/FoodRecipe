@@ -7,24 +7,40 @@ const API_BASE_URL = process.env.REACT_APP_API_URL;
 export default function EditRecipe() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const [title, setTitle] = useState("");
-    const [time, setTime] = useState("");
-    const [ingredients, setIngredients] = useState([]);
-    const [instructions, setInstructions] = useState("");
-    const [coverImage, setCoverImage] = useState(null);
+    const [recipeData, setRecipeData] = useState({
+        title: "",
+        time: "",
+        ingredients: [],
+        instructions: "",
+        coverImage: null
+    });
 
     useEffect(() => {
         axios.get(`${API_BASE_URL}/recipe/${id}`)
             .then(res => {
-                setTitle(res.data.title);
-                setTime(res.data.time);
-                setIngredients(res.data.ingredients);
-                setInstructions(res.data.instructions);
+                setRecipeData({
+                    title: res.data.title || "",
+                    time: res.data.time || "",
+                    ingredients: res.data.ingredients || [],
+                    instructions: res.data.instructions || "",
+                    coverImage: null
+                });
             })
             .catch(err => console.error("Error fetching recipe:", err));
     }, [id]);
 
-    const handleSubmit = async (e) => {
+    const onHandleChange = (e) => {
+        let val =
+            e.target.name === "ingredients"
+                ? e.target.value.split(",")
+                : e.target.name === "coverImage"
+                    ? e.target.files[0]
+                    : e.target.value;
+
+        setRecipeData(prev => ({ ...prev, [e.target.name]: val }));
+    };
+
+    const onHandleSubmit = async (e) => {
         e.preventDefault();
         const token = localStorage.getItem("token");
 
@@ -34,17 +50,17 @@ export default function EditRecipe() {
         }
 
         const formData = new FormData();
-        formData.append("title", title);
-        formData.append("time", time);
-        formData.append("ingredients", JSON.stringify(ingredients));
-        formData.append("instructions", instructions);
-        if (coverImage) formData.append("coverImage", coverImage);
+        for (const key in recipeData) {
+            if (recipeData[key] !== null) {
+                formData.append(key, key === "ingredients" ? JSON.stringify(recipeData[key]) : recipeData[key]);
+            }
+        }
 
         try {
             await axios.put(`${API_BASE_URL}/recipe/${id}`, formData, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "multipart/form-data"
+                    'Content-Type': 'multipart/form-data',
+                    'authorization': 'bearer ' + token
                 }
             });
             navigate("/myRecipe");
@@ -55,66 +71,63 @@ export default function EditRecipe() {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="form" style={{ maxWidth: "600px", margin: "0 auto" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-                <label>
-                    Title
+        <div className='container'>
+            <form className='form' onSubmit={onHandleSubmit}>
+                <div className='form-control'>
+                    <label>Title</label>
                     <input
                         type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                        className='input'
+                        name="title"
+                        value={recipeData.title}
+                        onChange={onHandleChange}
                         required
                     />
-                </label>
-
-                <label>
-                    Time
+                </div>
+                <div className='form-control'>
+                    <label>Time</label>
                     <input
                         type="text"
-                        value={time}
-                        onChange={(e) => setTime(e.target.value)}
+                        className='input'
+                        name="time"
+                        value={recipeData.time}
+                        onChange={onHandleChange}
                         required
                     />
-                </label>
-
-                <label>
-                    Ingredients
+                </div>
+                <div className='form-control'>
+                    <label>Ingredients</label>
                     <textarea
-                        value={ingredients.join(",")}
-                        onChange={(e) => setIngredients(e.target.value.split(","))}
+                        className='input-textarea'
+                        name="ingredients"
+                        rows="5"
+                        value={recipeData.ingredients.join(",")}
+                        onChange={onHandleChange}
                         required
-                        rows={4}
-                    />
-                </label>
-
-                <label>
-                    Instructions
+                    ></textarea>
+                </div>
+                <div className='form-control'>
+                    <label>Instructions</label>
                     <textarea
-                        value={instructions}
-                        onChange={(e) => setInstructions(e.target.value)}
+                        className='input-textarea'
+                        name="instructions"
+                        rows="5"
+                        value={recipeData.instructions}
+                        onChange={onHandleChange}
                         required
-                        rows={6}
-                    />
-                </label>
-
-                <label>
-                    Recipe Image
+                    ></textarea>
+                </div>
+                <div className='form-control'>
+                    <label>Recipe Image</label>
                     <input
                         type="file"
-                        onChange={(e) => setCoverImage(e.target.files[0])}
+                        className='input'
+                        name="coverImage"
+                        onChange={onHandleChange}
                     />
-                </label>
-
-                <button type="submit" style={{
-                    backgroundColor: "#c8f7dc",
-                    border: "none",
-                    padding: "10px 20px",
-                    borderRadius: "5px",
-                    cursor: "pointer"
-                }}>
-                    Update Recipe
-                </button>
-            </div>
-        </form>
+                </div>
+                <button type="submit">Update Recipe</button>
+            </form>
+        </div>
     );
 }
