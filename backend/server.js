@@ -4,27 +4,24 @@ const dotenv = require("dotenv").config();
 const connectDb = require("./config/connectionDb");
 const cors = require("cors");
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 // Connect to DB
 connectDb();
 
-// Allowed origins - allow localhost and any Vercel deploy of your project
+// CORS Allowed Origins
 const allowedOrigins = [
-  "http://localhost:3000"
+  /^http:\/\/localhost:\d+$/,  // Any localhost port (React, Vite, etc.)
+  /^https:\/\/.*\.vercel\.app$/, // Any Vercel deployment
+  /^https:\/\/.*\.netlify\.app$/ // Any Netlify deployment
 ];
 
-// Enable CORS with pattern matching
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // Allow non-browser requests
+      if (!origin) return callback(null, true); // Allow server-to-server calls
 
-      // Allow if origin is in list OR matches your Vercel project domain
-      if (
-        allowedOrigins.includes(origin) ||
-        /\.vercel\.app$/.test(new URL(origin).hostname)
-      ) {
+      if (allowedOrigins.some(pattern => pattern.test(origin))) {
         callback(null, true);
       } else {
         console.log("❌ Blocked by CORS:", origin);
@@ -42,7 +39,6 @@ app.use(express.static("public"));
 app.use("/", require("./routes/user"));
 app.use("/recipe", require("./routes/recipe"));
 
-// Start server
 app.listen(PORT, () => {
   console.log(`✅ App is listening on port ${PORT}`);
 });
