@@ -9,20 +9,25 @@ const PORT = process.env.PORT || 3000;
 // Connect to DB
 connectDb();
 
-// Allowed frontend origins
+// Allowed origins - allow localhost and any Vercel deploy of your project
 const allowedOrigins = [
-  "http://localhost:3000", // Local development
-  "https://food-recipe-6lcgkgatm-shlok-mehtas-projects-18532258.vercel.app" // Vercel frontend
+  "http://localhost:3000"
 ];
 
-// Enable CORS
+// Enable CORS with pattern matching
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin) return callback(null, true); // Allow non-browser requests
-      if (allowedOrigins.includes(origin)) {
+
+      // Allow if origin is in list OR matches your Vercel project domain
+      if (
+        allowedOrigins.includes(origin) ||
+        /\.vercel\.app$/.test(new URL(origin).hostname)
+      ) {
         callback(null, true);
       } else {
+        console.log("❌ Blocked by CORS:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
@@ -39,5 +44,5 @@ app.use("/recipe", require("./routes/recipe"));
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`App is listening on port ${PORT}`);
+  console.log(`✅ App is listening on port ${PORT}`);
 });
