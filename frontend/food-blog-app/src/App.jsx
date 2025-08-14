@@ -8,10 +8,13 @@ import AddFoodRecipe from './pages/AddFoodRecipe';
 import EditRecipe from './pages/EditRecipe';
 import RecipeDetails from './pages/RecipeDetails';
 
+// Base API URL (fallback to localhost for dev)
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 // Fetch all recipes safely
 const getAllRecipes = async () => {
   try {
-    const res = await axios.get('http://localhost:5000/recipe');
+    const res = await axios.get(`${API_URL}/recipe`);
     return res.data;
   } catch (err) {
     console.error("Error fetching all recipes:", err.response?.data || err.message);
@@ -48,13 +51,13 @@ const getFavRecipes = () => {
 // Fetch single recipe with creator's email safely
 const getRecipe = async ({ params }) => {
   try {
-    const recipeRes = await axios.get(`http://localhost:5000/recipe/${params.id}`);
+    const recipeRes = await axios.get(`${API_URL}/recipe/${params.id}`);
     let recipe = recipeRes.data;
 
     // Validate createdBy before making a user request
     if (recipe.createdBy && typeof recipe.createdBy === 'string' && recipe.createdBy.length === 24) {
       try {
-        const userRes = await axios.get(`http://localhost:5000/user/${recipe.createdBy}`);
+        const userRes = await axios.get(`${API_URL}/user/${recipe.createdBy}`);
         recipe = { ...recipe, email: userRes.data.email };
       } catch (userErr) {
         console.warn("Unable to fetch creator's email:", userErr.response?.data || userErr.message);
@@ -66,7 +69,7 @@ const getRecipe = async ({ params }) => {
     return recipe;
   } catch (err) {
     console.error("Error fetching recipe:", err.response?.data || err.message);
-    throw err; // Let React Router show error boundary if needed
+    throw err;
   }
 };
 
@@ -86,7 +89,5 @@ const router = createBrowserRouter([
 ]);
 
 export default function App() {
-  return (
-    <RouterProvider router={router}></RouterProvider>
-  );
+  return <RouterProvider router={router} />;
 }
