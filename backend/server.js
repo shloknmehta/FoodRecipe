@@ -9,7 +9,11 @@ import crypto from "crypto";
 import path from "path";
 
 dotenv.config();
-
+app.use(cors({
+  origin: 'https://food-recipe-liard-gamma.vercel.app', // your Vercel frontend URL
+  methods: ['GET','POST','PUT','DELETE'],
+  credentials: true
+}));
 const app = express();
 app.use(cors());
 app.use(express.json());
