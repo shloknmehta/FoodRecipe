@@ -25,14 +25,18 @@ export default function AddFoodRecipe() {
             formData.append(key, recipeData[key])
         }
 
-        await axios.post("http://localhost:5000/recipe", formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                'authorization': 'bearer ' + localStorage.getItem("token")
-            }
-        })
-
-        navigate("/")
+        try {
+            await axios.post(`${process.env.REACT_APP_API_URL}/recipe`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'authorization': 'bearer ' + localStorage.getItem("token")
+                }
+            })
+            navigate("/")
+        } catch (error) {
+            console.error("Error adding recipe:", error.response?.data || error.message)
+            alert(error.response?.data?.message || "Failed to add recipe.")
+        }
     }
 
     return (
