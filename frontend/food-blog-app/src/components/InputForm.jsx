@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_BASE_URL = process.env.REACT_APP_API_URL;
 
 export default function InputForm({ setIsOpen }) {
   const [email, setEmail] = useState("");
@@ -29,23 +29,27 @@ export default function InputForm({ setIsOpen }) {
   return (
     <form className='form' onSubmit={handleOnSubmit}>
       <div className='form-control'>
-        <label>Email</label>
+        <label htmlFor="email">Email</label>
         <input
+          id="email"
           type="email"
           className='input'
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          placeholder="Enter your email"
           required
         />
       </div>
 
       <div className='form-control'>
-        <label>Password</label>
+        <label htmlFor="password">Password</label>
         <input
+          id="password"
           type="password"
           className='input'
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter your password"
           required
         />
       </div>
