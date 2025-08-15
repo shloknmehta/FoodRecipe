@@ -18,8 +18,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: [
-      "http://localhost:5173", // Local dev
-      "https://food-recipe-liard-gamma.vercel.app" // Production frontend
+      "http://localhost:5173",
+      "https://food-recipe-liard-gamma.vercel.app"
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
@@ -29,11 +29,18 @@ app.use(
 const PORT = process.env.PORT || 10000;
 const MONGO_URI = process.env.MONGO_URI;
 
-// MongoDB Connection (Mongoose for schemas, native for GridFS)
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+// Mongoose settings
+mongoose.set("strictQuery", false);
+
+mongoose
+  .connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    connectTimeoutMS: 30000, // 30s
+    socketTimeoutMS: 45000   // 45s
+  })
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch(err => console.error("❌ MongoDB connection error:", err));
 
 const conn = mongoose.connection;
 
@@ -41,7 +48,7 @@ let gfs;
 conn.once("open", () => {
   gfs = Grid(conn.db, mongoose.mongo);
   gfs.collection("uploads");
-  console.log("✅ MongoDB & GridFS connected");
+  console.log("✅ GridFS initialized");
 });
 
 // Multer GridFS Storage
@@ -60,7 +67,7 @@ const storage = new GridFsStorage({
 
 const upload = multer({ storage });
 
-// Mongoose Schema
+// Schema
 const recipeSchema = new mongoose.Schema({
   title: String,
   time: String,
@@ -73,7 +80,10 @@ const recipeSchema = new mongoose.Schema({
 
 const Recipe = mongoose.model("Recipe", recipeSchema);
 
-// Routes
+// Root route for Render health check
+app.get("/", (req, res) => {
+  res.send("🍲 Food Recipe API is running");
+});
 
 // Create Recipe
 app.post("/recipe", upload.single("coverImage"), async (req, res) => {
@@ -146,6 +156,10 @@ app.get("/recipe/:id", async (req, res) => {
 
 // Serve images from GridFS
 app.get("/images/:filename", async (req, res) => {
+  if (!gfs) {
+    return res.status(500).json({ message: "File storage not initialized" });
+  }
+
   try {
     const file = await gfs.files.findOne({ filename: req.params.filename });
     if (!file) return res.status(404).json({ message: "Image not found" });
