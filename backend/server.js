@@ -92,9 +92,7 @@ app.get("/", (req, res) => {
   res.send("🍲 Food Recipe API is running");
 });
 
-// ----------------- INLINE RECIPE ROUTES (unchanged) -----------------
-
-// Create Recipe
+// ----------------- INLINE RECIPE ROUTES -----------------
 app.post("/recipe", upload.single("coverImage"), async (req, res) => {
   try {
     const { title, time, ingredients, instructions, email, createdBy } = req.body;
@@ -119,7 +117,6 @@ app.post("/recipe", upload.single("coverImage"), async (req, res) => {
   }
 });
 
-// Update Recipe
 app.put("/recipe/:id", upload.single("coverImage"), async (req, res) => {
   try {
     const recipe = await Recipe.findById(req.params.id);
@@ -142,7 +139,6 @@ app.put("/recipe/:id", upload.single("coverImage"), async (req, res) => {
   }
 });
 
-// Get all recipes
 app.get("/recipe", async (req, res) => {
   try {
     const recipes = await Recipe.find();
@@ -152,7 +148,6 @@ app.get("/recipe", async (req, res) => {
   }
 });
 
-// Get single recipe
 app.get("/recipe/:id", async (req, res) => {
   try {
     const recipe = await Recipe.findById(req.params.id);
@@ -163,7 +158,6 @@ app.get("/recipe/:id", async (req, res) => {
   }
 });
 
-// Serve images from GridFS
 app.get("/images/:filename", async (req, res) => {
   if (!gfs) {
     return res.status(500).json({ message: "File storage not initialized" });
@@ -184,10 +178,9 @@ app.get("/images/:filename", async (req, res) => {
   }
 });
 
-// ----------------- ROUTE FILE MOUNTING (NEW) -----------------
-app.use("/api/user", userRoutes);      // mounts /signUp, /login, /user/:id
-app.use("/api/recipe", recipeRoutes);  // mounts controller-based recipe routes
-// ---------------------------------------------------------------
+// ----------------- ROUTE FILE MOUNTING -----------------
+app.use("/api", userRoutes);     // Now login is POST /api/login
+app.use("/api/recipe", recipeRoutes);
 
 // Start Server
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

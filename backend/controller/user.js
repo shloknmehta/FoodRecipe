@@ -22,11 +22,11 @@ const userSignUp = async (req, res) => {
             password: hashPwd
         });
 
-        // Token expires in 1 second
+        // Token expires in 1 hour now
         let token = jwt.sign(
             { email, id: newUser._id },
             process.env.SECRET_KEY,
-            { expiresIn: '1s' }
+            { expiresIn: "1h" }
         );
 
         return res.status(200).json({ token, user: newUser });
@@ -45,11 +45,11 @@ const userLogin = async (req, res) => {
     try {
         let user = await User.findOne({ email });
         if (user && await bcrypt.compare(password, user.password)) {
-            // Token expires in 1 second
+            // Token expires in 1 hour now
             let token = jwt.sign(
                 { email, id: user._id },
                 process.env.SECRET_KEY,
-                { expiresIn: '1s' }
+                { expiresIn: "1h" }
             );
 
             return res.status(200).json({ token, user });
@@ -64,7 +64,6 @@ const userLogin = async (req, res) => {
 const getUser = async (req, res) => {
     const { id } = req.params;
 
-    // Validate ID before querying MongoDB
     if (!id || id === "null" || !mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ error: "Invalid or missing user ID" });
     }
