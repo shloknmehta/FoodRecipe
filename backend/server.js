@@ -8,6 +8,10 @@ import Grid from "gridfs-stream";
 import crypto from "crypto";
 import path from "path";
 
+// Import route files
+import userRoutes from "./routes/user.js";
+import recipeRoutes from "./routes/recipe.js";
+
 dotenv.config();
 
 const app = express();
@@ -29,7 +33,6 @@ app.use(
   })
 );
 
-
 const PORT = process.env.PORT || 10000;
 const MONGO_URI = process.env.MONGO_URI;
 
@@ -40,8 +43,8 @@ mongoose
   .connect(MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    connectTimeoutMS: 30000, // 30s
-    socketTimeoutMS: 45000   // 45s
+    connectTimeoutMS: 30000,
+    socketTimeoutMS: 45000
   })
   .then(() => console.log("✅ MongoDB connected"))
   .catch(err => console.error("❌ MongoDB connection error:", err));
@@ -84,10 +87,12 @@ const recipeSchema = new mongoose.Schema({
 
 const Recipe = mongoose.model("Recipe", recipeSchema);
 
-// Root route for Render health check
+// Root route for health check
 app.get("/", (req, res) => {
   res.send("🍲 Food Recipe API is running");
 });
+
+// ----------------- INLINE RECIPE ROUTES (unchanged) -----------------
 
 // Create Recipe
 app.post("/recipe", upload.single("coverImage"), async (req, res) => {
@@ -178,6 +183,11 @@ app.get("/images/:filename", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ----------------- ROUTE FILE MOUNTING (NEW) -----------------
+app.use("/api/user", userRoutes);      // mounts /signUp, /login, /user/:id
+app.use("/api/recipe", recipeRoutes);  // mounts controller-based recipe routes
+// ---------------------------------------------------------------
 
 // Start Server
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
