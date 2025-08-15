@@ -16,25 +16,25 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: 'https://food-recipe-liard-gamma.vercel.app',
-  methods: ['GET','POST','PUT','DELETE'],
+  origin: 'https://food-recipe-liard-gamma.vercel.app', // Your Vercel frontend URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
 
 const PORT = process.env.PORT || 10000;
-const MONGO_URI = process.env.MONGO_URI;
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://..."; // use env variable for safety
 
-// MongoDB Connection
+// MongoDB connection for GridFS
 const conn = mongoose.createConnection(MONGO_URI);
 let gfs;
 
 conn.once("open", () => {
   gfs = Grid(conn.db, mongoose.mongo);
   gfs.collection("uploads");
-  console.log("Connected to MongoDB");
+  console.log("✅ Connected to MongoDB Atlas");
 });
 
-// Multer GridFS Storage
+// Multer GridFS storage
 const storage = new GridFsStorage({
   url: MONGO_URI,
   file: (req, file) => {
@@ -59,10 +59,7 @@ const recipeSchema = new mongoose.Schema({
   createdBy: String,
   email: String
 });
-
 const Recipe = mongoose.model("Recipe", recipeSchema);
-
-// Routes
 
 // Create Recipe
 app.post("/recipe", upload.single("coverImage"), async (req, res) => {
@@ -92,8 +89,8 @@ app.put("/recipe/:id", upload.single("coverImage"), async (req, res) => {
 
     recipe.title = req.body.title || recipe.title;
     recipe.time = req.body.time || recipe.time;
-    recipe.ingredients = req.body.ingredients 
-      ? (typeof req.body.ingredients === "string" ? JSON.parse(req.body.ingredients) : req.body.ingredients) 
+    recipe.ingredients = req.body.ingredients
+      ? (typeof req.body.ingredients === "string" ? JSON.parse(req.body.ingredients) : req.body.ingredients)
       : recipe.ingredients;
     recipe.instructions = req.body.instructions || recipe.instructions;
     if (req.file) recipe.coverImage = req.file.filename;
@@ -139,4 +136,4 @@ app.get("/images/:filename", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
