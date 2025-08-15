@@ -19,7 +19,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://food-recipe-liard-gamma.vercel.app"
+      "https://food-recipe-c4k1vqkg3-shlok-mehtas-projects-18532258.vercel.app"
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
