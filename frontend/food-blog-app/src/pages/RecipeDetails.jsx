@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLoaderData } from 'react-router-dom';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const API_BASE_URL = process.env.REACT_APP_API_URL || "https://foodrecipe-sab6.onrender.com/api";
 
 export default function RecipeDetails() {
   const recipe = useLoaderData();
