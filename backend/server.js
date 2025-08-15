@@ -15,23 +15,33 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({
-  origin: 'https://food-recipe-liard-gamma.vercel.app',
-  methods: ['GET','POST','PUT','DELETE'],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173", // Local dev
+      "https://food-recipe-liard-gamma.vercel.app" // Production frontend
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+  })
+);
 
 const PORT = process.env.PORT || 10000;
 const MONGO_URI = process.env.MONGO_URI;
 
-// MongoDB Connection
-const conn = mongoose.createConnection(MONGO_URI);
-let gfs;
+// MongoDB Connection (Mongoose for schemas, native for GridFS)
+mongoose.connect(MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
 
+const conn = mongoose.connection;
+
+let gfs;
 conn.once("open", () => {
   gfs = Grid(conn.db, mongoose.mongo);
   gfs.collection("uploads");
-  console.log("Connected to MongoDB");
+  console.log("✅ MongoDB & GridFS connected");
 });
 
 // Multer GridFS Storage
@@ -47,6 +57,7 @@ const storage = new GridFsStorage({
     });
   }
 });
+
 const upload = multer({ storage });
 
 // Mongoose Schema
@@ -68,15 +79,20 @@ const Recipe = mongoose.model("Recipe", recipeSchema);
 app.post("/recipe", upload.single("coverImage"), async (req, res) => {
   try {
     const { title, time, ingredients, instructions, email, createdBy } = req.body;
+
     const recipe = new Recipe({
       title,
       time,
-      ingredients: typeof ingredients === "string" ? JSON.parse(ingredients) : ingredients,
+      ingredients:
+        typeof ingredients === "string"
+          ? JSON.parse(ingredients)
+          : ingredients,
       instructions,
       coverImage: req.file?.filename || null,
       email,
       createdBy
     });
+
     await recipe.save();
     res.status(201).json(recipe);
   } catch (err) {
@@ -92,8 +108,10 @@ app.put("/recipe/:id", upload.single("coverImage"), async (req, res) => {
 
     recipe.title = req.body.title || recipe.title;
     recipe.time = req.body.time || recipe.time;
-    recipe.ingredients = req.body.ingredients 
-      ? (typeof req.body.ingredients === "string" ? JSON.parse(req.body.ingredients) : req.body.ingredients) 
+    recipe.ingredients = req.body.ingredients
+      ? typeof req.body.ingredients === "string"
+        ? JSON.parse(req.body.ingredients)
+        : req.body.ingredients
       : recipe.ingredients;
     recipe.instructions = req.body.instructions || recipe.instructions;
     if (req.file) recipe.coverImage = req.file.filename;
@@ -132,6 +150,10 @@ app.get("/images/:filename", async (req, res) => {
     const file = await gfs.files.findOne({ filename: req.params.filename });
     if (!file) return res.status(404).json({ message: "Image not found" });
 
+    if (!file.contentType.startsWith("image/")) {
+      return res.status(400).json({ message: "Not an image file" });
+    }
+
     const readstream = gfs.createReadStream({ filename: file.filename });
     readstream.pipe(res);
   } catch (err) {
@@ -139,4 +161,5 @@ app.get("/images/:filename", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Start Server
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
